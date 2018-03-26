@@ -7,14 +7,9 @@ import preprocessing as pre
 import lda
 import dtm
 
+# 'step' is set to run corresponding step
+step = 1
 
-start_path = "./说明.txt"
-step = 0
-with codecs.open(start_path, 'r', 'utf-8') as pfile:
-    for line in pfile:
-        if line.startswith("start"):
-            step = int(line.strip().split('=')[1])
-print(step)
 if step == 1:
     # Stage 1
     pre.clean_docs()
