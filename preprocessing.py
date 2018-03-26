@@ -147,6 +147,7 @@ def participle():
         seperate_word = line.strip().split('-')
         num = len(seperate_word)
         for i in range(1, num):
+            # 将同义词表中后一个词全部映射到前一个词
             combine_dict[seperate_word[i]] = seperate_word[0]
 
     if not os.path.exists(output_dir):
@@ -164,17 +165,24 @@ def participle():
             texts = fin.read()
             stop_text = f_stop.read()
             word_list = []
+            # 分词
             seg_list = jieba.cut(texts)
             seg_list = "/".join(seg_list)
-            stop_seg_list = stop_text.split('\n')
 
+            # 同义词替换
+            seg_text = []
             for word in seg_list.split('/'):
-                if (not (word.strip() in stop_seg_list)) and \
-                        (not is_instr(word.strip())) and len(word.strip()) > 1:
-                    if word.strip() in combine_dict:
-                        word_list.append(combine_dict[word])
-                    else:
-                        word_list.append(word)
+                if word in combine_dict.keys():
+                    seg_text.append(combine_dict[word])
+                else:
+                    seg_text.append(word)
+
+            # 去除停用词
+            stop_seg_list = stop_text.split('\n')
+            for word in seg_text:
+                if (not (word in stop_seg_list)) and (not is_instr(word.strip())):
+                    word_list.append(word)
+
             word_list = " ".join(word_list)
             fout.write(word_list)
     print("Stage 3 finished.")
@@ -325,13 +333,25 @@ def plot_samples():
 
     timestaps = list(time_window.keys())
     num_timestap = list(time_window.values())
-    plt.figure()
+
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+
+    # 设置图片的尺寸
+    plt.figure(figsize=(12, 8))
+
     plt.bar(timestaps, num_timestap, 0.8, color="blue")
+
+    # 设置图片的边距
+    plt.subplots_adjust(left=0.08, right=0.95, top=0.95, bottom=0.1)
+
+    # 若要去掉标题，在下面一行代码前面加上#
     plt.title('Samples Description')
+
     plt.xlabel('Year')
     plt.ylabel('Number')
 
-    plt.savefig(figure_dir + '/' + 'samples-description.png')
+    plt.savefig(figure_dir + '/' + 'samples-description.svg')
     plt.show()
 
 

@@ -1,0 +1,218 @@
+
+R version 3.4.1 (2017-06-30) -- "Single Candle"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+
+RÊÇ×ÔÓÉÈí¼þ£¬²»´øÈÎºÎµ£±£¡£
+ÔÚÄ³Ð©Ìõ¼þÏÂÄã¿ÉÒÔ½«Æä×ÔÓÉÉ¢²¼¡£
+ÓÃ'license()'»ò'licence()'À´¿´É¢²¼µÄÏêÏ¸Ìõ¼þ¡£
+
+RÊÇ¸öºÏ×÷¼Æ»®£¬ÓÐÐí¶àÈËÎªÖ®×ö³öÁË¹±Ï×.
+ÓÃ'contributors()'À´¿´ºÏ×÷ÕßµÄÏêÏ¸Çé¿ö
+ÓÃ'citation()'»á¸æËßÄãÈçºÎÔÚ³ö°æÎïÖÐÕýÈ·µØÒýÓÃR»òR³ÌÐò°ü¡£
+
+ÓÃ'demo()'À´¿´Ò»Ð©Ê¾·¶³ÌÐò£¬ÓÃ'help()'À´ÔÄ¶ÁÔÚÏß°ïÖúÎÄ¼þ£¬»ò
+ÓÃ'help.start()'Í¨¹ýHTMLä¯ÀÀÆ÷À´¿´°ïÖúÎÄ¼þ¡£
+ÓÃ'q()'ÍË³öR.
+
+[Ô­À´±£´æµÄ¹¤×÷¿Õ¼äÒÑ»¹Ô­]
+
+> #! /path/to/Rscript
+> 
+> library(stats)
+> library(strucchange)
+ÔØÈëÐèÒªµÄ³Ì¼­°ü£ºzoo
+
+ÔØÈë³Ì¼­°ü£º'zoo'
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+ÔØÈëÐèÒªµÄ³Ì¼­°ü£ºsandwich
+> 
+> topic_times <- read.table("./models/db/topic_times.csv", header=F, sep=",")
+> time_start <- read.table("./models/db/time-seq.txt", header=F)
+> col <- length(topic_times[1,])-2
+> topic_num <- c(1:col)
+> 
+> 
+> ####################################################################
+> # (1)ä»¥ä¸‹éƒ¨åˆ†å¯¹strucchange_topicè¿›è¡Œç»˜å›¾
+> 
+> for(i in topic_num){
++ 
++   svg(file=paste("./Figures/strucchange_topic",as.character(i-1),".svg"),width=12, height=8)
++ 
++   prob <- ts(topic_times[,i], start=c(as.numeric(time_start[1,1])), frequency=1)
++ 
++   # store the breakdates
++   bp_ts <- breakpoints(prob~1)
++ 
++   # this will give you the break dates and their confidence intervals
++   summary(bp_ts)
++ 
++   # to plot the breakpoints with confidence intervals
++   # plot(prob,main=paste("Topic",as.character(i-1)),lwd=2)
++ 
++   # ä¿®æ”¹å›¾ç‰‡è¾¹è·ï¼Œå³maråŽé¢çš„å€¼
++   par(oma=c(8,2,2,2), mar=c(6,4,2,2))
++   plot(prob, ann = F, xaxt = "n", yaxt = "n", lwd=2)
++   lines(bp_ts)
++ 
++   # ä»¥ä¸‹éƒ¨åˆ†ä¸ºæ˜¾ç¤ºå‡å€¼çº¿
++   bdate <- breakdates(bp_ts)
++   ptr <- c()
++   for(bd in bdate){
++     ptr <- c(ptr, which(time_start[,1] == bd))
++   }
++   idx <- 1
++   for(p in ptr){
++     x <- c(time_start[idx, 1], time_start[p, 1])
++     y <- c(mean(prob[idx:p]), mean(prob[idx:p]))
++     # è®¾ç½®åˆ†åŒºå‡å€¼çº¿çš„ç²—ç»†ï¼Œä¿®æ”¹lwdå‚æ•°
++     lines(x, y, lwd=1)
++     idx <- p
++   }
++   x <- c(time_start[idx, 1], time_start[length(prob)-1, 1])
++   y <- c(mean(prob[idx:length(prob)]), mean(prob[idx:length(prob)]))
++   # è®¾ç½®åˆ†åŒºå‡å€¼çº¿çš„ç²—ç»†ï¼Œä¿®æ”¹lwdå‚æ•°
++   lines(x, y, lwd=1)
++ 
++   a <- c(time_start[1,1], time_start[length(prob)-1, 1])
++   b <- c(mean(prob), mean(prob))
++   # è®¾ç½®æ•´ä½“å‡å€¼çº¿çš„ç²—ç»†ï¼Œä¿®æ”¹lwdå‚æ•°
++   lines(a, b, lwd=2)
++ 
++   axis(side=1, tcl=0.5, cex.axis=1)
++   axis(side=2, tcl=0.5, cex.axis=1)
++   title(xlab= 'Year', ylab = 'Probability',line = 3)
++ 
++   dev.off()
++ }
+> 
+> #########################################################################
+> # (2)ä»¥ä¸‹éƒ¨åˆ†å¯¹topic-time_std_strucchangeè¿›è¡Œç»˜å›¾
+> svg(file=paste("./Figures/topic_time_std_strucchange.svg"),width=12, height=8)
+> prob <- ts(topic_times[,length(topic_times[1,])], start=c(as.numeric(time_start[1,1])), frequency=1)
+> bp_ts <- breakpoints(prob~1)
+> summary(bp_ts)
+
+	 Optimal (m+1)-segment partition: 
+
+Call:
+breakpoints.formula(formula = prob ~ 1)
+
+Breakpoints at observation number:
+                      
+m = 1      30         
+m = 2   18 29         
+m = 3   18 29 39      
+m = 4   18 29 39    58
+m = 5   18 29 39 49 59
+
+Corresponding to breakdates:
+                                
+m = 1        1977               
+m = 2   1965 1976               
+m = 3   1965 1976 1986          
+m = 4   1965 1976 1986      2005
+m = 5   1965 1976 1986 1996 2006
+
+Fit:
+                                                                     
+m   0          1          2          3          4          5         
+RSS    0.06605    0.02396    0.01543    0.01361    0.01352    0.01338
+BIC -275.36425 -336.87950 -358.75179 -358.96701 -350.96344 -343.19849
+> 
+> plot(prob, ann = F, xaxt = "n", yaxt = "n", lwd=2)
+> 
+> lines(bp_ts)
+> 
+> c <- c(time_start[1,1], time_start[length(prob)-1, 1])
+> d <- c(topic_times[1,length(topic_times[1,])-1], topic_times[1,length(topic_times[1,])-1])
+> lines(c, d, lwd=2)
+> 
+> # ä»¥ä¸‹éƒ¨åˆ†ä¸ºæ˜¾ç¤ºå‡å€¼çº¿
+>   bdate <- breakdates(bp_ts)
+>   ptr <- c()
+>   for(bd in bdate){
++     ptr <- c(ptr, which(time_start[,1] == bd))
++   }
+>   idx <- 1
+>   for(p in ptr){
++     x <- c(time_start[idx, 1], time_start[p, 1])
++     y <- c(mean(prob[idx:p]), mean(prob[idx:p]))
++     # è®¾ç½®åˆ†åŒºå‡å€¼çº¿çš„ç²—ç»†ï¼Œä¿®æ”¹lwdå‚æ•°
++     lines(x, y, lwd=1)
++     idx <- p
++   }
+>   x <- c(time_start[idx, 1], time_start[length(prob)-1, 1])
+>   y <- c(mean(prob[idx:length(prob)]), mean(prob[idx:length(prob)]))
+>   # è®¾ç½®åˆ†åŒºå‡å€¼çº¿çš„ç²—ç»†ï¼Œä¿®æ”¹lwdå‚æ•°
+>   lines(x, y, lwd=1)
+>   e <- c(time_start[1,1], time_start[length(prob)-1, 1])
+>   f <- c(mean(prob), mean(prob))
+>   # è®¾ç½®æ•´ä½“å‡å€¼çº¿çš„ç²—ç»†ï¼Œä¿®æ”¹lwdå‚æ•°
+>   lines(e, f, lwd=1)
+> 
+> axis(side=1, tcl=0.5, cex.axis=1)
+> axis(side=2, tcl=0.5, cex.axis=1)
+> title(xlab= 'Year', ylab = 'Mean & Standard deviation',line = 3)
+> dev.off()
+null device 
+          1 
+> 
+> ####################################################################
+> # (3)ä»¥ä¸‹éƒ¨åˆ†å¯¹word-time_std_strucchangeè¿›è¡Œç»˜å›¾
+> for(i in topic_num){
++ 
++   word_times <- read.table(paste("./models/db/word-times_topic",as.character(i-1),".csv", sep=""), header=F, sep=",")
++   svg(file=paste("./Figures/word_time_std_strucchange_topic",as.character(i-1),".svg"),width=12, height=8)
++ 
++   row <- length(word_times[,1])
++   col <- length(word_times[1,])
++   wt <- as.numeric(word_times[row, 2:col])
++   prob <- ts(wt, start=c(as.numeric(time_start[1,1])), frequency=1)
++   bp_ts <- breakpoints(prob~1)
++ 
++   plot(prob, ann = F, xaxt = "n", yaxt = "n", lwd=2)
++ 
++   # ä¿®æ”¹å›¾ç‰‡è¾¹è·ï¼Œå³maråŽé¢çš„å€¼
++   par(oma=c(1,1,1,1), mar=c(2,2,2,2))
++   lines(bp_ts)
++ 
++   # ä»¥ä¸‹éƒ¨åˆ†ä¸ºæ˜¾ç¤ºå‡å€¼çº¿
++   bdate <- breakdates(bp_ts)
++   ptr <- c()
++   for(bd in bdate){
++     ptr <- c(ptr, which(time_start[,1] == bd))
++   }
++   idx <- 1
++   for(p in ptr){
++     x <- c(time_start[idx, 1], time_start[p, 1])
++     y <- c(mean(prob[idx:p]), mean(prob[idx:p]))
++     # è®¾ç½®åˆ†åŒºå‡å€¼çº¿çš„ç²—ç»†ï¼Œä¿®æ”¹lwdå‚æ•°
++     lines(x, y, lwd=1)
++     idx <- p
++   }
++   x <- c(time_start[idx, 1], time_start[length(prob)-1, 1])
++   y <- c(mean(prob[idx:length(prob)]), mean(prob[idx:length(prob)]))
++   # è®¾ç½®åˆ†åŒºå‡å€¼çº¿çš„ç²—ç»†ï¼Œä¿®æ”¹lwdå‚æ•°
++   lines(x, y, lwd=1)
++ 
++   a <- c(time_start[1,1], time_start[length(prob)-1, 1])
++   b <- c(mean(prob), mean(prob))
++   # è®¾ç½®æ•´ä½“å‡å€¼çº¿çš„ç²—ç»†ï¼Œä¿®æ”¹lwdå‚æ•°
++   lines(a, b, lwd=2)
++ 
++   axis(side=1, tcl=0.5, cex.axis=1)
++   axis(side=2, tcl=0.5, cex.axis=1)
++   title(xlab = 'Year', ylab = 'Standard deviation',line = 3)
++ 
++   dev.off()
++ }
+> 
+> proc.time()
+ ÓÃ»§  ÏµÍ³  Á÷ÊÅ 
+ 6.26  0.96 17.86 

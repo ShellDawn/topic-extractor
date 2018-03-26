@@ -12,7 +12,7 @@ def lda_estimate():
 
     train_path = "./models/lda/corpus_train.dat"
     test_path = "./models/lda/corpus_test.dat"
-    params_path = "./setting/lda_params.txt"
+    params_path = "./setting/model_params.txt"
 
     # get parameters from setting file
     with codecs.open(params_path, 'r', 'utf-8') as pfile:
@@ -53,19 +53,21 @@ def lda_estimate():
                  + " -treval 1"+" -dfile "+str(dfile)
         os.system("lda.exe -est "+params)
         print("Training finished.")
-    print("Finished.")
+    os.chdir("../../../")
+    return ntopics
 
 
 # Using trained model to do inference on test set
-def lda_inference():
-
-    params_path = "./setting/lda_params.txt"
+def lda_inference(ntopics):
+    '''
+    params_path = "./setting/model_params.txt"
     with codecs.open(params_path, 'r', 'utf-8') as pfile:
         for line in pfile:
             if line.startswith('ntopics'):
                 line = line.split('=')[1]
                 line = line[1:-3].split(',')
                 ntopics = list(int(line[i]) for i in range(len(line)))
+    '''
     # call external C++ exe to run LDA inference
     os.chdir("./lib/GibbsLDA++/bin")
     dir_prefix = "../../../models/lda/topic_"
@@ -76,20 +78,30 @@ def lda_inference():
         params = "-dir "+dir+" -model model-final -niters 20 -twords 50 -treval 1 -teval 1 -dfile "+tfile
         os.system("lda.exe -inf " + params)
         print("Inference finished.")
+    os.chdir("../../../")
 
 
 def figure_plot(topic, perplexity):
-    x = topic
-    y = perplexity
-    plt.plot(x, y, marker="*", color="red", linewidth=2)
-    plt.xlabel("Number of Topics")
-    plt.ylabel("Perplexity")
-
     figure_dir = "./Figures"
     if not os.path.exists(figure_dir):
         os.mkdir(figure_dir)
+    x = topic
+    y = perplexity
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
 
-    plt.savefig(figure_dir + '/' + 'perplexity.png')
+    # 设置图片的尺寸
+    plt.figure(figsize=(12, 8))
+
+    plt.plot(x, y, marker="*", color="red", linewidth=2)
+
+    # 设置图片的边距
+    plt.subplots_adjust(left=0.08, right=0.95, top=0.95, bottom=0.1)
+
+    plt.xlabel("Number of Topics")
+    plt.ylabel("Perplexity")
+
+    plt.savefig(figure_dir + '/' + 'perplexity.svg')
     plt.show()
 
 
@@ -139,16 +151,9 @@ def cal_perplex(topic_word, doc_topic, tassign):
 
 
 # Plot "perplexity" to "number of topics" of LDA according to model results
-def plot_perplexity():
+def plot_perplexity(ntopics):
 
     dir_prefix = "./models/lda/topic_"
-    params_path = "./setting/lda_params.txt"
-    with codecs.open(params_path, 'r', 'utf-8') as pfile:
-        for line in pfile:
-            if line.startswith('ntopics'):
-                line = line.split('=')[1]
-                line = line[1:-3].split(',')
-                ntopics = list(int(line[i]) for i in range(len(line)))
     perplexity_list = []
     for topic in ntopics:
         print("topic", topic)

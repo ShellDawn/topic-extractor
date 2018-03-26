@@ -99,9 +99,8 @@ def cal_word_times(topic_no, time_slice, k_term=8):
     matrix = matrix.reshape((-1, time_slice))
     matrix = np.exp(matrix)
     matrix = pd.DataFrame(matrix)
-    # print "matrix:\n", matrix
     vocab = pd.read_table(vocab_file_path, header=None, encoding='utf-8')
-    # print "vocab:\n", vocab
+
     # count total prob. of each term in all time slices
     matrix['sum'] = matrix.apply(lambda x: x.sum(), axis=1)
     top_k_term = sorted(np.array(matrix['sum']), reverse=True)
@@ -120,20 +119,29 @@ def cal_word_times(topic_no, time_slice, k_term=8):
 
     # visualizing terms-times in topic "topic_no"
     date_list = []
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
     with codecs.open(time_file_path, 'r', 'utf-8') as tfile:
         for line in tfile:
             date_list.append(int(line.strip()))
     if k_term <= 20:
-        fig, ax = plt.subplots(figsize=(12, 6))
+        # 设置图例字体大小(主题数目<=20时的情况)
         font = FontProperties(fname='C:\Windows\Fonts\msyh.ttc', size=10)
     elif k_term > 20:
-        fig, ax = plt.subplots(figsize=(12, 8))
+        # 设置图例字体大小(主题数目>20时的情况)
         font = FontProperties(fname='C:\Windows\Fonts\msyh.ttc', size=8)
-    plt.subplots_adjust(left=0.1)
+
     colors = ["red", "blue", "black", "orange", "purple", "green", "magenta", "cyan", "yellow", "gray"]
     markers = ['+', '.', '*']
     color_index = 0
     marker_index = 0
+
+    # 设置图片的尺寸
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # 设置坐标轴标签的字体大小，即修改'size'的值
+    font2 = {'weight': 'normal', 'size': 10}
+
     for i in range(k_term):
         legend_name = var_names[i]
         ax.plot(date_list, y_vars[i][1:], 'k--', marker=markers[marker_index],
@@ -153,18 +161,57 @@ def cal_word_times(topic_no, time_slice, k_term=8):
     else:
         ncol = 6
     ax.legend(prop=font, loc='best', ncol=ncol)
-    plt.title("Topic"+str(topic_no))
-    plt.ylabel("Probability")
-    plt.xlabel("Year")
 
-    plt.savefig(figure_dir + '/' + 'word-time_topic'+str(topic_no)+'.png')
+    df_data = []
+    for i in range(k_term):
+        df_data.append(y_vars[i][1:])
+    df_data = pd.DataFrame(df_data, dtype=float)
+
+    df_mean = df_data.apply(lambda x: np.mean(x), axis=0)
+    df_std = df_data.apply(lambda x: np.std(x), axis=0)
+    
+    ###########################################################################
+    # 若不显示均值线与标准差线，将下面这部分代码行前后分别用'''注释掉
+    '''
+    right_axis = ax.twinx()
+    right_axis.plot(date_list, df_mean, marker=".", linestyle="-", label="Mean", color="black", linewidth=1.5)
+    right_axis.plot(date_list, df_std, marker="|", linestyle="-", label="Standard deviation", color="black", linewidth=1.5)
+    right_axis.legend(prop=font, loc='upper center', bbox_to_anchor=(0.9, 0.8))
+    right_axis.set_ylabel("Mean & Standard deviation", fontdict=font2)
+    '''
+    ###########################################################################
+
+    # 若不显示标题，则在下面这行代码前面加上#
+    plt.title("Topic"+str(topic_no))
+
+    # 设置坐标轴标签的字体大小，即修改'size'的值
+    font2 = {'weight': 'normal', 'size': 10}
+    ax.set_xlabel(xlabel="Year", fontdict=font2)
+    ax.set_ylabel(ylabel="Probability", fontdict=font2)
+
+    # 设置坐标轴刻度值的字体大小，即修改labelsize的值
+    plt.tick_params(labelsize=10)
+
+    # 设置图片的边距
+    fig.subplots_adjust(left=0.08, right=0.93, top=0.95, bottom=0.1)
+
+    plt.savefig(figure_dir + '/' + 'word-time_topic'+str(topic_no)+'.svg')
     plt.show()
 
     # write results to csv
     y_vars = pd.DataFrame(y_vars)
+    df_mean = list(df_mean)
+    df_mean.insert(0, 0)
+    df_mean = np.array(df_mean).reshape(1, -1)
+    df_mean = pd.DataFrame(df_mean)
+    df_std = list(df_std)
+    df_std.insert(0, 0)
+    df_std = np.array(df_std).reshape(1, -1)
+    df_std = pd.DataFrame(df_std)
+    y_res = pd.concat([y_vars, df_mean, df_std], axis=0)
     date_list.insert(0, 'Year')
-    y_vars.columns = date_list
-    y_vars.to_csv(outfile_prefix + '.csv', header=True, index=False, encoding='GBK')
+    y_res.columns = date_list
+    y_res.to_csv(outfile_prefix + '.csv', header=True, index=False, encoding='GBK')
 
 
 def show_word_times():
@@ -198,11 +245,18 @@ def cal_stdvar():
     date_list.insert(0, 1948)
     x = date_list
     y = topic_time['var']
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
     plt.plot(x, y, marker="+", color="red", linewidth=2)
+
+    # 设置图片的边距
+    plt.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1)
+
     plt.xlabel("Year")
     plt.ylabel("Standard deviation")
 
-    plt.savefig(figure_dir + '/' + 'topics.std.png')
+    # 设置保存图片的尺寸
+    plt.savefig(figure_dir + '/' + 'topics.std.svg', figsize=(16, 9))
     plt.show()
 
 
@@ -247,19 +301,21 @@ def cal_topic_times():
         gam_sum.ix[i, :-1] = gam_sum.ix[i, :-1].apply(lambda x: x/sum_value)
     result = gam_sum.ix[:, :-1]
 
-    # calculate standard deviation of each time slice in topic-time matrix
-    topic_time = result
-    topic_time['std'] = topic_time.apply(lambda x: np.std(x), axis=1)
-    topic_time.to_csv(out_file, header=False, index=False)
-
     # visualizing topics-times
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+
     if num_topics < 10:
-        fig, left_axis = plt.subplots(figsize=(12, 6))
+        # 设置图例字体大小(主题数目<10时的情况)
         font = FontProperties(fname='C:\Windows\Fonts\msyh.ttc', size=10)
     elif num_topics >= 10:
-        fig, left_axis = plt.subplots(figsize=(12, 8))
+        # 设置图例字体大小(主题数目>=10时的情况)
         font = FontProperties(fname='C:\Windows\Fonts\msyh.ttc', size=9)
+
+    # 设置图片的尺寸
+    fig, left_axis = plt.subplots(figsize=(12, 8))
     right_axis = left_axis.twinx()
+
     date_list = []
     with codecs.open(time_file_path, 'r', 'utf-8') as tfile:
         for line in tfile:
@@ -268,6 +324,17 @@ def cal_topic_times():
     markers = ['o', '*',  '.']
     color_index = 0
     marker_index = 0
+
+    '''
+    # 绘制箱线图
+    topic_time = result
+    label = ["" for i in range(len(date_list))]
+    for i in range(0, len(date_list), 5):
+        label[i] = date_list[i]
+    bp = right_axis.boxplot(topic_time, labels=label)
+    print(bp['fliers'][0].get_ydata())
+    '''
+
     for (k, v) in topics.items():
         legend_name = v
         left_axis.scatter(date_list, result.ix[:, k], marker=markers[marker_index],
@@ -282,16 +349,38 @@ def cal_topic_times():
         ncol = 2
     else:
         ncol = 3
+
+    # 设置坐标轴标签的字体大小，即修改'size'的值
+    font2 = {'weight': 'normal', 'size': 10}
+
     left_axis.legend(prop=font, bbox_to_anchor=(0.95, 0.85), ncol=ncol)
-    left_axis.set_ylabel("Relative weight")
+    left_axis.set_ylabel("Relative weight", fontdict=font2)
+    left_axis.set_xlabel("Year", fontdict=font2)
 
-    y2 = topic_time['std']
-    right_axis.plot(date_list, y2, marker="^", label="std.", color="black", linewidth=1)
+    topic_time = result
+    topic_time['mean'] = topic_time.apply(lambda x: np.mean(x), axis=1)
+    topic_time['std'] = topic_time.apply(lambda x: np.std(x), axis=1)
+    topic_time.to_csv(out_file, header=False, index=False)
+
+    # 画均值线
+    y2 = topic_time['mean']
+    right_axis.plot(date_list, y2, linestyle="--", label="Mean", color="black", linewidth=1)
+
+    # 画标准差线
+    y3 = topic_time['std']
+    right_axis.plot(date_list, y3, marker="+", label="Standard deviation", color="black", linewidth=1)
+
     right_axis.legend(prop=font, bbox_to_anchor=(0.95, 0.95))
-    right_axis.set_ylabel("Standard deviation")
+    right_axis.set_ylabel("Mean & Standard deviation", fontdict=font2)
 
-    left_axis.set_xlabel("Year")
-    plt.savefig(figure_dir + '/' + 'topic-time.png')
+    # 设置坐标轴刻度值的字体大小，即修改labelsize的值
+    plt.tick_params(labelsize=10)
+
+    # 设置图片的边距
+    plt.subplots_adjust(left=0.08, right=0.92, top=0.92, bottom=0.08)
+
+    # 设置保存图片的尺寸
+    plt.savefig(figure_dir + '/' + 'topic-time.svg')
     plt.show()
 
 
@@ -335,8 +424,14 @@ def show_topic_docs():
     df_T = df.T
     df_T.columns = list(range(num_topics))
     df_T.to_csv(out_file, index=False, header=True, encoding='GBK')
+
     # visualizing topic-docs
-    font = FontProperties(fname='C:\Windows\Fonts\msyh.ttc')
+    # 设置图例字体大小(主题数目<10时的情况)
+    font = FontProperties(fname='C:\Windows\Fonts\msyh.ttc', size=10)
+
+    # 设置坐标轴标签的字体大小，即修改'size'的值
+    font2 = {'weight': 'normal', 'size': 10}
+
     for t in range(num_topics):
         data = df_T.ix[:, t]
         x_var = list(data.apply(lambda x: float(x.strip().split(" ")[1])))
@@ -346,15 +441,29 @@ def show_topic_docs():
         print("x_var\n", x_var)
         print("y_var\n", y_var)
         idx = np.arange(len(x_var))
-        plt.figure(figsize=(12, 6))
-        plt.subplots_adjust(left=0.2)
+        plt.rcParams['xtick.direction'] = 'in'
+        plt.rcParams['ytick.direction'] = 'in'
+
+        # 设置图片尺寸
+        plt.figure(figsize=(12, 8))
+
         plt.barh(idx, x_var)
         plt.yticks(idx, y_var, fontproperties=font)
         plt.grid(axis='x')
         plt.xlabel("Weight")
         plt.ylabel("Document")
+
+        # 设置图片的边距
+        plt.subplots_adjust(left=0.2, right=0.95, top=0.95, bottom=0.1)
+
+        # 设置坐标轴刻度值的字体大小，即修改labelsize的值
+        plt.tick_params(labelsize=10)
+
+        # 若不显示标题，则在下面这行代码前面加上#
         plt.title("Topic "+str(t))
-        plt.savefig(figure_dir + '/' + 'topic'+str(t)+'-docs.png')
+
+        # 设置保存图片的尺寸
+        plt.savefig(figure_dir + '/' + 'topic'+str(t)+'-docs.svg')
         plt.show()
 
 
