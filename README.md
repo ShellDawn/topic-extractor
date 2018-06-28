@@ -7,7 +7,7 @@
 
 2.[cleaned_data]目录：数据预处理阶段生成的文件，程序运行会逐步生成4个子文件夹和1个'temp_dicts.txt'。其中[stage_1_out]子文件夹存放去除原始数据集中重复文档后的文档，[stage_2_out]子文件存放去除文档中非中文字符后的结果，[stage_3_out]子文件夹存放分词及去掉停用词后的结果，[stage_4_out]子文件夹存放去掉整个语料库中的高频词低频词后的结果，'temp_dicts.txt'存放的是去掉分词及停用词后的所有非重复的词。
 
-3.[lib]目录：LDA和DTM模型的C++源码及可执行程序文件。
+3.[lib]目录：LDA和DTM模型的可执行程序文件。
 
 4.[models]目录：包含3个子目录，其中[db]目录为DTM模型的输入文件及进行可视化制图所需的结果文件，[lda]目录为LDA模型的原始输出文件，[dtm]目录为DTM模型的原始输出文件。
 
@@ -23,26 +23,37 @@
 
 [2] 去重非中文文本部分：生成结果在cleaned_data目录下的stage_2_out子文件夹中。
 
-[3] 分词并去除停用词操作：生成结果在cleaned_data目录下的stage_3_out子文件夹中，涉及setting目录下的3个文件(用户自定义词表user_defined_dicts.txt、停用词表stop_words.txt、同义词表synonyms_words.txt）。
+[3] 分词并去除停用词操作：生成结果在cleaned_data目录下的stage_3_out子文件夹中，涉及setting目录下的3个文件
+(用户自定义词表user_defined_dicts.txt、停用词表stop_words.txt、同义词表synonyms_words.txt）。
 
-[4] 去除高频低频词操作(运行约2h)：生成结果在cleaned_data目录下的stage_4_out子文件夹及temp_dicts.txt，涉及setting目录下model_params.txt文件的low_frequency_threshold参数和high_frequency_threshold参数设置。
+[4] 去除高频低频词操作：生成结果在cleaned_data目录下的stage_4_out子文件夹及temp_dicts.txt，
+涉及setting目录下model_params.txt文件的low_frequency_threshold参数和high_frequency_threshold参数设置。
 
 [5] 显示样本数量随时间变化的曲线，运行结果保存在Figures目录下。
 
-[6] 运行LDA并显示主题数的困惑度曲线(运行约1h)：涉及setting目录下model_params.txt文件的LDA部分的ntopics参数设置，运行结果保存在Figures目录下。
+[6] 生成LDA模型所需的数据集，运行结果保存在models/db和models/lda目录下。
 
-[7] 运行动态主题模型DTM(运行约2h)：涉及setting目录下model_params.txt文件的DTM部分的topics、words参数设置。
+[7] 运行LDA模型：涉及setting目录下model_params.txt文件的LDA部分的ntopics参数设置。
 
-[8] 显示不同主题下的词随时间变化的曲线，运行结果保存在Figures目录下。
+[8] 显示主题数的困惑度曲线：涉及setting目录下model_params.txt文件的LDA部分的topic_list参数，运行结果保存
+在Figures目录下。
 
-[9] 显示不同主题对应的文档关联度的曲线，运行结果保存在Figures目录下。
+[9] 运行动态主题模型DTM：涉及setting目录下model_params.txt文件的DTM部分的topics、words参数设置。
 
-[10] 显示主题随时间变化(包含其标准差)的曲线：涉及setting目录下model_params.txt文件的DTM部分的具体topic的手动设置，以便于在曲线图中进行显示，运行结果保存在Figures目录下。
+[10] 显示不同主题下的词随时间变化的曲线，运行结果保存在Figures目录下。
 
-[11] 显示不同主题的structual change曲线图，运行结果保存在Figures目录下。
+[11] 显示不同主题对应的文档关联度的曲线，运行结果保存在Figures目录下。
+
+[12] 显示主题随时间变化(包含其标准差)的曲线：涉及setting目录下model_params.txt文件的DTM部分的
+具体topic的手动设置，以便于在曲线图中进行显示，运行结果保存在Figures目录下。
+
+[13] 显示不同主题的structual change曲线图，运行结果保存在Figures目录下。
+
+[14] 获取文档-主题权重分布的结果：根据setting目录下model_params.txt文件的DTM部分的topics参数（设定的最优
+主题数）运行一次LDA主题模型，运行结果保存在models/db/doc_topic.csv文件中。
 
 #### 「注意」
 
 [1] 上述[1]-[7]的操作有严格的先后顺序，即每一步的执行必须要确保前面的步骤已经执行完毕！
 
-[2] 在运行第[6]步之前记住要在setting目录下model_params.txt文件的DTM部分进行具体topic的手动设置！
+[2] 在运行第[9]步之前记住要在setting目录下model_params.txt文件的DTM部分进行具体topic的手动设置！

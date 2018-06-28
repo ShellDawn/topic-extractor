@@ -1,11 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import codecs
 import text2ldac
-import text2code
+import doc2lda
 import preprocessing as pre
 import lda
 import dtm
+
 
 # 'step' is set to run corresponding step
 step = 1
@@ -22,31 +22,37 @@ elif step == 3:
 elif step == 4:
     # Stage 4
     pre.remove_lh_words()
-    # Generate train/test data
-    pre.divide_corpus()
 elif step == 5:
     # Plot how many samples are computed
     pre.plot_samples()
 elif step == 6:
+    # Generate train/test data
+    lda.divide_corpus()
     text2ldac.gen_ldac_corpus()
-    # Run LDA model with Gibbs sampling
-    ntopics = lda.lda_estimate()
-    # Using trained model to do inference on test set
-    lda.lda_inference(ntopics)
-    # Plot "perplexity" to "number of topics" of LDA according to model results
-    lda.plot_perplexity(ntopics)
 elif step == 7:
+    # Run LDA model with Gibbs sampling
+    lda.lda_estimate()
+    # Using trained model to do inference on test set
+    lda.lda_inference()
+elif step == 8:
+    # Plot "perplexity" to "number of topics" of LDA according to model results
+    lda.plot_perplexity()
+elif step == 9:
     # Run Dynamic Topic Model(DTM)
     dtm.dtm_estimate()
-elif step == 8:
+elif step == 10:
     # Visualize word-time from DTM output
     dtm.show_word_times()
-elif step == 9:
+elif step == 11:
     # Visualize topic-doc from DTM output
     dtm.show_topic_docs()
-elif step == 10:
+elif step == 12:
     # Visualize topic-time from DTM output
     dtm.cal_topic_times()
-elif step == 11:
+elif step == 13:
     # Visualize structual-changes of topic to times
     dtm.cal_strucchange()
+elif step == 14:
+    # Output doc-topic result
+    ntopic, docs = doc2lda.lda_train()
+    doc2lda.save_doc_topic(ntopic, docs)

@@ -4,7 +4,6 @@ import os
 import re
 import csv
 import jieba
-import random
 import matplotlib.pyplot as plt
 
 
@@ -135,6 +134,7 @@ def participle():
     stopwords_path = "./setting/stop_words.txt"
     synonyms_path = "./setting/synonyms_words.txt"
     user_dicts = "./setting/user_defined_dicts.txt"
+
     input_dir = "./cleaned_data/stage_2_out"
     output_dir = "./cleaned_data/stage_3_out"
 
@@ -172,6 +172,7 @@ def participle():
             # 同义词替换
             seg_text = []
             for word in seg_list.split('/'):
+                word = word.strip()
                 if word in combine_dict.keys():
                     seg_text.append(combine_dict[word])
                 else:
@@ -243,14 +244,7 @@ def remove_lh_words():
                     freq_dict[word] += 1
 
     print("==================================")
-    '''
-    csvfile = file(out_dict_file, 'w')
-    writer = csv.writer(csvfile)
-    for word in word_set:
-        print(word, "\t", freq_dict[word])
-        writer.writerow([str(word), str(freq_dict[word])])
-    csvfile.close()
-    '''
+
     with open(out_dict_file, 'w') as out_dict:
         writer = csv.writer(out_dict)
         for word in word_set:
@@ -277,40 +271,6 @@ def remove_lh_words():
             store_words = " ".join(store_words)
             fout.write(store_words)
     print("Stage 4 finished.\n")
-
-
-# Divide cleaned data into training data and test data
-def divide_corpus():
-
-    corpus_dir = "./cleaned_data/stage_4_out"
-    lda_model_dir = "./models/lda"
-
-    if not os.path.exists(lda_model_dir):
-        os.mkdir(lda_model_dir)
-
-    corpus =[]
-    for root, dirs, files in os.walk(corpus_dir):
-        for file in files:
-            doc_path = os.path.join(root, file)
-            doc = codecs.open(doc_path, 'r', 'utf-8').read()
-            corpus.append(doc)
-    print("Total documents: ", len(corpus))
-
-    random.shuffle(corpus)
-    p = int(len(corpus)*0.9)
-    train = corpus[:p]
-    test = corpus[p:]
-
-    with codecs.open(lda_model_dir+"/"+"corpus_train.dat", 'w', 'utf-8') as datfile:
-        datfile.write(str(len(train)) + '\n')
-        for doc in train:
-            datfile.write(doc + '\n')
-    with codecs.open(lda_model_dir+"/"+"corpus_test.dat", 'w', 'utf-8') as testfile:
-        testfile.write(str(len(test)) + '\n')
-        for doc in test:
-            testfile.write(doc + '\n')
-    print("Train documents: ", len(train))
-    print("Test documents: ", len(test))
 
 
 # Plot how many samples are computed
@@ -361,5 +321,4 @@ if __name__ == '__main__':
     #clean_chars()
     #participle()
     #remove_lh_words()
-    #divide_corpus()
     #plot_samples()

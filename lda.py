@@ -2,9 +2,43 @@
 import os
 import codecs
 import shutil
+import random
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+
+# Divide cleaned data into training data and test data
+def divide_corpus():
+    corpus_dir = "./cleaned_data/stage_4_out"
+    lda_model_dir = "./models/lda"
+
+    if not os.path.exists(lda_model_dir):
+        os.mkdir(lda_model_dir)
+
+    corpus =[]
+    for root, dirs, files in os.walk(corpus_dir):
+        for file in files:
+            doc_path = os.path.join(root, file)
+            doc = codecs.open(doc_path, 'r', 'utf-8').read()
+            corpus.append(doc)
+    print("Total documents: ", len(corpus))
+
+    random.shuffle(corpus)
+    p = int(len(corpus)*0.9)
+    train = corpus[:p]
+    test = corpus[p:]
+
+    with codecs.open(lda_model_dir+"/"+"corpus_train.dat", 'w', 'utf-8') as datfile:
+        datfile.write(str(len(train)) + '\n')
+        for doc in train:
+            datfile.write(doc + '\n')
+    with codecs.open(lda_model_dir+"/"+"corpus_test.dat", 'w', 'utf-8') as testfile:
+        testfile.write(str(len(test)) + '\n')
+        for doc in test:
+            testfile.write(doc + '\n')
+    print("Train documents: ", len(train))
+    print("Test documents: ", len(test))
 
 
 # Run LDA model with Gibbs sampling
@@ -22,9 +56,7 @@ def lda_estimate():
             elif line.startswith("beta"):
                 beta = line.split('=')[1].strip()
             elif line.startswith('ntopics'):
-                line = line.split('=')[1]
-                line = line[1:-3].split(',')
-                ntopics = list(int(line[i]) for i in range(len(line)))
+                topic = line.split('=')[1].strip()
             elif line.startswith('niters'):
                 niters = line.split('=')[1].strip()
             elif line.startswith('savestep'):
@@ -32,53 +64,47 @@ def lda_estimate():
             elif line.startswith('twords'):
                 twords = line.split('=')[1].strip()
     # create dirs for LDA model output
-    for topic in ntopics:
-        tdir = "./models/lda/topic_"+str(topic)
-        if not os.path.exists(tdir):
-            os.mkdir(tdir)
-        tfile = tdir + "/corpus_train.dat"
-        testfile = tdir + "/corpus_test.dat"
-        if not os.path.exists(tfile):
-            shutil.copyfile(train_path, tfile)
-        if not os.path.exists(testfile):
-            shutil.copyfile(test_path, testfile)
+    tdir = "./models/lda/topic_" + str(topic)
+    if not os.path.exists(tdir):
+        os.mkdir(tdir)
+
+    tfile = tdir + "/corpus_train.dat"
+    testfile = tdir + "/corpus_test.dat"
+    if not os.path.exists(tfile):
+        shutil.copyfile(train_path, tfile)
+    if not os.path.exists(testfile):
+        shutil.copyfile(test_path, testfile)
 
     # call external C++ exe to run LDA topic model
+    print("Training LDA model with", topic, "topics...")
     os.chdir("./lib/GibbsLDA++/bin")
-    for topic in ntopics:
-        print("Training LDA model with", topic, "topics...")
-        dfile = "../../../models/lda/topic_"+str(topic)+"/corpus_train.dat"
-        params = "-alpha "+str(alpha)+" -beta "+str(beta)+" -ntopics "+str(topic)\
-                 + " -niters "+str(niters)+" -savestep "+str(savestep)+" -twords "+str(twords)\
-                 + " -treval 1"+" -dfile "+str(dfile)
-        os.system("lda.exe -est "+params)
-        print("Training finished.")
+    dfile = "../../../models/lda/corpus_train.dat"
+    params = "-alpha " + str(alpha) + " -beta " + str(beta) + " -ntopics " + str(topic) \
+             + " -niters " + str(niters) + " -savestep " + str(savestep) + " -twords " + str(twords) \
+             + " -treval 1" + " -dfile " + str(dfile)
+    os.system("lda.exe -est " + params)
     os.chdir("../../../")
-    return ntopics
+    print("Training finished.")
 
 
 # Using trained model to do inference on test set
-def lda_inference(ntopics):
-    '''
+def lda_inference():
     params_path = "./setting/model_params.txt"
     with codecs.open(params_path, 'r', 'utf-8') as pfile:
         for line in pfile:
             if line.startswith('ntopics'):
-                line = line.split('=')[1]
-                line = line[1:-3].split(',')
-                ntopics = list(int(line[i]) for i in range(len(line)))
-    '''
+                topic = line.split('=')[1].strip()
+
     # call external C++ exe to run LDA inference
+    print("Inference on test set with", topic, "topics...")
     os.chdir("./lib/GibbsLDA++/bin")
     dir_prefix = "../../../models/lda/topic_"
-    for topic in ntopics:
-        print("Inference on test set with", topic, "topics...")
-        tfile = dir_prefix+str(topic)+"/corpus_test.dat"
-        dir = dir_prefix+str(topic)+'/'
-        params = "-dir "+dir+" -model model-final -niters 20 -twords 50 -treval 1 -teval 1 -dfile "+tfile
-        os.system("lda.exe -inf " + params)
-        print("Inference finished.")
+    tfile = "../../../models/lda/corpus_test.dat"
+    dir = dir_prefix + str(topic) + '/'
+    params = "-dir " + dir + " -model model-final -niters 20 -twords 50 -treval 1 -teval 1 -dfile " + tfile
+    os.system("lda.exe -inf " + params)
     os.chdir("../../../")
+    print("Inference finished.")
 
 
 def figure_plot(topic, perplexity):
@@ -104,7 +130,7 @@ def figure_plot(topic, perplexity):
     plt.savefig(figure_dir + '/' + 'perplexity.svg')
     plt.show()
 
-
+'''
 # Calculate perplexity of LDA
 def cal_perplex(topic_word, doc_topic, tassign):
 
@@ -124,7 +150,7 @@ def cal_perplex(topic_word, doc_topic, tassign):
         sum_t += len(doc_i)
     print("sum_t:", sum_t)
 
-    '''
+    
     for i in range(len(tassign)):
         doc_i = tassign[i].strip().split(" ")
         print(len(doc_i))
@@ -143,19 +169,26 @@ def cal_perplex(topic_word, doc_topic, tassign):
                 pz += p_tz*p_zd
             log_pw += np.log(pz+0.0001)
         sum_log_pw += log_pw
-    '''
+    
 
     perplexity = np.exp(-sum_log_pw/sum_t)
     print("perplex: ", perplexity)
     return perplexity
-
+'''
 
 # Plot "perplexity" to "number of topics" of LDA according to model results
-def plot_perplexity(ntopics):
-
+def plot_perplexity():
     dir_prefix = "./models/lda/topic_"
+    params_path = "./setting/model_params.txt"
     perplexity_list = []
-    for topic in ntopics:
+
+    with codecs.open(params_path, 'r', 'utf-8') as pfile:
+        for line in pfile:
+            if line.startswith('topic_list'):
+                line = line.split('=')[1]
+                line = line[1:-3].split(',')
+                topic_list = list(int(line[i]) for i in range(len(line)))
+    for topic in topic_list:
         print("topic", topic)
         dir = dir_prefix + str(topic) + '/'
         px_path = dir+"corpus_test.dat.perplex.txt"
@@ -164,8 +197,23 @@ def plot_perplexity(ntopics):
         px = float(px_list[-1].strip())
         perplexity_list.append(px)
         print("px:", px)
+    figure_plot(topic_list, perplexity_list)
 
-    figure_plot(ntopics, perplexity_list)
+
+# Save doc-topic matrix
+def save_doc_topic():
+    directory = "./cleaned_data/stage_4_out"
+    gam_file_path = "./models/dtm/lda-seq/gam.dat"
+    param_path = "./setting/model_params.txt"
+    with codecs.open(param_path, 'r', 'utf-8') as pfile:
+        for line in pfile:
+            if line.startswith("topics"):
+                num_topics = int(line.strip().split('=')[1])
+
+    gammas = pd.read_table(gam_file_path, header=None)
+    gammas = np.array(gammas)
+    gammas = gammas.reshape((-1, num_topics))
+    gammas = pd.DataFrame(gammas)
 
 
 if __name__ == "__main__":

@@ -9,10 +9,14 @@ high_frequency_threshold=0.7
 
 alpha=0.25
 beta=0.1
-ntopics=[5, 15, 20, 25, 30, 35, 40, 45, 50, 60, 80, 100, 150, 200]
+ntopics=5
 niters=20
 savestep=20
 twords=50
+
+#设置绘制perplexity所选取的主题数列表
+
+topic_list=[5,10,15,20]
 
 #######################################################################
 #下列参数用于设置Dynamic Topic Model(DTM)

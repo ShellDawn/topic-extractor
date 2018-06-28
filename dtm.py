@@ -358,9 +358,12 @@ def cal_topic_times():
     left_axis.set_xlabel("Year", fontdict=font2)
 
     topic_time = result
+    title = 'topic_'
+    topic_time.columns = [title+str(i) for i in range(num_topics)]
     topic_time['mean'] = topic_time.apply(lambda x: np.mean(x), axis=1)
     topic_time['std'] = topic_time.apply(lambda x: np.std(x), axis=1)
-    topic_time.to_csv(out_file, header=False, index=False)
+    topic_time.index = date_list
+    topic_time.to_csv(out_file, header=True, index=True)
 
     # 画均值线
     y2 = topic_time['mean']
