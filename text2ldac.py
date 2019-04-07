@@ -84,6 +84,7 @@ def clean_word(word):
     '''
     return word.rstrip(string.punctuation).lstrip(string.punctuation).lower()
 
+
 def load_stopwords(stopword_filename):
     '''
     returns a set of stopwords found line by line in the stopwords file
@@ -100,6 +101,7 @@ def load_stopwords(stopword_filename):
 
     return stopwords
 
+
 def write_document_map_file(fnames, dmap_fname):
     """
     Save document's names in the order they were processed
@@ -107,6 +109,7 @@ def write_document_map_file(fnames, dmap_fname):
     with codecs.open(dmap_fname,'w','utf-8') as d_file:
         for title in fnames:
             d_file.write(title + '\n')
+
 
 def reindex(word_id_dict, min_index):
     """
@@ -120,6 +123,7 @@ def reindex(word_id_dict, min_index):
         if cur_index > min_index:
             word_id_dict[word] = min_index + num_word_shifts
             num_word_shifts += 1
+
 
 def generate_dat_lines_and_word_ids(fnames, config):
     dat_lines = [] #.dat file output
@@ -192,49 +196,35 @@ def generate_dat_lines_and_word_ids(fnames, config):
 def generate_dat_and_vocab_files(fnames, config):
 
     with codecs.open(config['datname'], 'w', 'utf-8') as datfile:
-        dat_lines, word_id_dict = generate_dat_lines_and_word_ids(fnames,
-                config)
+        dat_lines, word_id_dict = generate_dat_lines_and_word_ids(fnames, config)
         datfile.writelines(dat_lines)
 
-    #sort word_id_dict ascending by value und write the words in that
-    #order to a .vocab file
+    # sort word_id_dict ascending by value und write the words in that order to a .vocab file
     with codecs.open(config['vocabname'], 'w', 'utf-8') as vocabfile:
         for item in sorted(word_id_dict.items(), key=operator.itemgetter(1)):
             vocabfile.write(item[0]+'\n')
 
-    print('Found {0} unique words in {1} files.'.format(
-        len(word_id_dict), len(fnames)))
-    print('Results can be found in "{0}" and "{1}"'.format(
-        config['datname'], config['vocabname']))
+    print('Found {0} unique words in {1} files.'.format(len(word_id_dict), len(fnames)))
+    print('Results can be found in "{0}" and "{1}"'.format(config['datname'], config['vocabname']))
 
 
-def gen_ldac_corpus():
-
-    # directory with document files
-    dirname = "./cleaned_data/stage_4_out"
-    # directory for results
-    outdir_name = "./models/db/"
+def gen_ldac_corpus(data_dir, db_dir):
     # prefix of the .dat and .vocab files
-    basename = os.path.dirname(dirname).split('/')[-1]
-    if not os.path.exists(outdir_name):
-        os.mkdir(outdir_name)
+    basename = os.path.dirname(data_dir).split('/')[-1]
+    if not os.path.exists(db_dir):
+        os.mkdir(db_dir)
     # store configuration
     config = dict()
-    config['datname'] = outdir_name + basename + '-mult' + '.dat'
-    config['vocabname'] = outdir_name + basename + '.vocab'
-    config['dmapname'] = outdir_name + basename + '.dmap'
+    config['datname'] = db_dir + '/' + basename + '-mult' + '.dat'
+    config['vocabname'] = db_dir + '/' + basename + '.vocab'
+    config['dmapname'] = db_dir + '/' + basename + '.dmap'
     config['stopwords'] = set()
     config['minlength'] = 1
     config['minoccurrence'] = 1
 
-    fnames = get_filenames(dirname, '.txt')
+    fnames = get_filenames(data_dir, '.txt')
     try:
         generate_dat_and_vocab_files(fnames, config)
     except IOError as ioe:
         print(ioe)
     print("Blei's lda-c format input files generated.\n")
-
-
-if __name__ == '__main__':
-    print("Test functions in 'text2ldac.py'.")
-    gen_ldac_corpus()

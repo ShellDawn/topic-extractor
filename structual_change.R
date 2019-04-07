@@ -14,7 +14,7 @@ topic_num <- c(1:col)
 
 for(i in topic_num){
 
-  svg(file=paste("./Figures/strucchange_topic",as.character(i-1),".svg"),width=12, height=8)
+  svg(file=paste("./results/strucchange_topic",as.character(i-1),".svg"),width=12, height=8)
 
   prob <- ts(topic_times[,i], start=c(as.numeric(time_start[1,1])), frequency=1)
 
@@ -65,7 +65,7 @@ for(i in topic_num){
 
 #########################################################################
 # (2)以下部分对topic-time_std_strucchange进行绘图
-svg(file=paste("./Figures/topic_time_std_strucchange.svg"),width=12, height=8)
+svg(file=paste("./results/topic_time_std_strucchange.svg"),width=12, height=8)
 prob <- ts(topic_times[,length(topic_times[1,])], start=c(as.numeric(time_start[1,1])), frequency=1)
 bp_ts <- breakpoints(prob~1)
 summary(bp_ts)
@@ -113,7 +113,7 @@ dev.off()
 for(i in topic_num){
 
   word_times <- read.table(paste("./models/db/word-times_topic",as.character(i-1),".csv", sep=""), header=F, sep=",")
-  svg(file=paste("./Figures/word_time_std_strucchange_topic",as.character(i-1),".svg"),width=12, height=8)
+  svg(file=paste("./results/word_time_std_strucchange_topic",as.character(i-1),".svg"),width=12, height=8)
 
   row <- length(word_times[,1])
   col <- length(word_times[1,])
