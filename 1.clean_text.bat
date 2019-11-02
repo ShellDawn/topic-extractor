@@ -1,3 +1,3 @@
 @echo off
-python clean_text.py
+python ./scripts/clean_text.py
 pause

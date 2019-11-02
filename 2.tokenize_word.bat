@@ -1,3 +1,3 @@
 @echo off
-python tokenize_word.py
+python ./scripts/tokenize_word.py
 pause

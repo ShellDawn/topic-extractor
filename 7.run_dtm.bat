@@ -1,3 +1,3 @@
 @echo off
-python run_dtm.py
+python -m scripts.run_dtm
 pause

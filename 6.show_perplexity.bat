@@ -1,3 +1,3 @@
 @echo off
-python show_perplexity.py
+python ./scripts/show_perplexity.py
 pause

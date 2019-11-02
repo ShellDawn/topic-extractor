@@ -1,3 +1,3 @@
 @echo off
-python save_doc_topic.py
+python -m scripts.save_doc_topic
 pause

@@ -1,3 +1,3 @@
 @echo off
-python run_lda.py
+python -m scripts.run_lda
 pause

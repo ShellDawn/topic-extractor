@@ -1,3 +1,3 @@
 @echo off
-python show_text_description.py
+python ./scripts/show_text_description.py
 pause

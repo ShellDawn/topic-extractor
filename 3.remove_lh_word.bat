@@ -1,3 +1,3 @@
 @echo off
-python remove_lh_word.py
+python ./scripts/remove_lh_word.py
 pause

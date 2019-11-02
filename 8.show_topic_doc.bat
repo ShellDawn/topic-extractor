@@ -1,3 +1,3 @@
 @echo off
-python show_topic_doc.py
+python ./scripts/show_topic_doc.py
 pause
