@@ -21,7 +21,7 @@
     
     5. [scripts]：存放Python与R脚本代码，以及LDA和DTM模型的C++代码.
     
-    5. [setting]：存放设置参数的文件.其中'model_params.txt'定义主题模型的参数以及定义高频词低频词的频度阈值，'stop_words.txt'定义停用词表，'synonyms_words.txt'定义同义词表，'user_defined_dicts.txt'设置用户自定义的词典.
+    6. [setting]：存放设置参数的文件.其中'model_params.txt'定义主题模型的参数以及定义高频词低频词的频度阈值，'stop_words.txt'定义停用词表，'synonyms_words.txt'定义同义词表，'user_defined_dicts.txt'设置用户自定义的词典.
 
 
 #### 程序运行说明
